@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delivery Daily Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #161921;
+    --border: #252b38;
+    --accent: #00d4aa;
+    --accent-dim: rgba(0,212,170,0.12);
+    --warn: #ff6b35;
+    --text: #e4e8f0;
+    --muted: #7a8499;
+    --rnp: #4da6ff;
+    --rvp: #00d4aa;
+    --rnb: #a78bfa;
+    --rva: #fbbf24;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-badge {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 13px;
+    color: #0d0f14;
+    letter-spacing: 0.04em;
+  }
+
+  .logo-text {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  #clock {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    padding: 28px 32px;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* ── DATE BAR ── */
+  .date-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .date-bar h1 {
+    font-size: 26px;
+    font-weight: 300;
+    letter-spacing: -0.01em;
+  }
+
+  .date-bar h1 span {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .shift-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+  }
+
+  .shift-tab {
+    padding: 6px 16px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .shift-tab.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid rgba(0,212,170,0.25);
+  }
+
+  /* ── KPI CARDS ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .kpi-card:hover { border-color: rgba(0,212,170,0.3); }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-accent, var(--accent));
+  }
+
+  .kpi-label {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .kpi-value {
+    font-size: 32px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── TWO COLUMN ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 18px;
+    margin-bottom: 28px;
+  }
+
+  /* ── TABLE ── */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .table-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .table-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  .entry-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,212,170,0.2);
+    border-radius: 20px;
+    padding: 2px 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    padding: 10px 20px;
+    text-align: left;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(37,43,56,0.6);
+    transition: background 0.1s;
+  }
+
+  tbody tr:hover { background: rgba(255,255,255,0.025); }
+  tbody tr:last-child { border-bottom: none; }
+
+  td {
+    padding: 11px 20px;
+    font-size: 13px;
+  }
+
+  .td-body {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .td-time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .model-tag {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  .model-RVP { background: rgba(0,212,170,0.12); color: var(--rvp); border: 1px solid rgba(0,212,170,0.25); }
+  .model-RNP { background: rgba(77,166,255,0.12); color: var(--rnp); border: 1px solid rgba(77,166,255,0.25); }
+  .model-RNB { background: rgba(167,139,250,0.12); color: var(--rnb); border: 1px solid rgba(167,139,250,0.25); }
+  .model-RVA { background: rgba(251,191,36,0.12); color: var(--rva); border: 1px solid rgba(251,191,36,0.25); }
+  .model-default { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
+
+  /* ── MODEL SUMMARY ── */
+  .model-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+
+  .model-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .model-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+  }
+
+  .model-item {
+    background: var(--surface);
+    padding: 14px 18px;
+    transition: background 0.1s;
+  }
+
+  .model-item:hover { background: rgba(255,255,255,0.03); }
+
+  .model-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .model-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .model-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .model-total {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .model-bar-wrap { margin-top: 4px; }
+
+  .model-bar-track {
+    height: 3px;
+    background: var(--bg);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .model-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* ── DATA ENTRY FORM ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .form-inner {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .field-full { grid-column: 1 / -1; }
+
+  label {
+    display: block;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,212,170,0.08);
+  }
+
+  select option { background: var(--surface); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .btn-submit {
+    grid-column: 1 / -1;
+    background: var(--accent);
+    color: #0d0f14;
+    border: none;
+    border-radius: 6px;
+    padding: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn-submit:hover { opacity: 0.88; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 13px;
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    z-index: 100;
+  }
+
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+
+  .date-nav-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .date-nav-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  .today-btn {
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,212,170,0.25);
+    border-radius: 6px;
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .today-btn:hover { opacity: 0.8; }
+
+  .color-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  .color-chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .color-chip:hover {
+    border-color: rgba(255,255,255,0.25);
+    color: var(--text);
+  }
+
+  .color-chip.selected {
+    border-color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.07);
+    color: var(--text);
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.15);
+  }
+
+  .color-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .td-color-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  .btn-delete {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .btn-delete:hover {
+    background: rgba(255,107,53,0.12);
+    border-color: rgba(255,107,53,0.4);
+    color: var(--warn);
+  }
+
+  /* ── TABLE SCROLL WRAPPER (always) ── */
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table { min-width: 600px; width: 100%; }
+
+  /* ── TABLET (≤900px) ── */
+  @media (max-width: 900px) {
+    main { padding: 20px 16px; }
+    header { padding: 14px 16px; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .two-col { grid-template-columns: 1fr; }
+    .form-inner { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .model-list { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+  }
+
+  /* ── MOBILE (≤600px) ── */
+  @media (max-width: 600px) {
+    /* Sticky header */
+    header {
+      padding: 10px 14px;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .logo-badge { width: 30px; height: 30px; font-size: 11px; }
+    .logo-text { font-size: 13px; }
+    .logo-sub { display: none; }
+    #clock { font-size: 11px; }
+    .live-badge { font-size: 10px; }
+
+    /* Main */
+    main { padding: 12px 12px 32px; }
+    .section-label { font-size: 9px; margin-bottom: 10px; }
+
+    /* Date bar */
+    .date-bar { gap: 10px; margin-bottom: 16px; padding-bottom: 14px; }
+    .date-bar h1 { font-size: 15px; white-space: nowrap; }
+    /* Date nav row — wrap nicely */
+    .date-nav-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+    #date-picker { flex: 1; min-width: 120px; font-size: 13px; padding: 7px 8px; }
+    .date-nav-btn { padding: 7px 13px; font-size: 16px; min-width: 38px; }
+    .today-btn { padding: 7px 12px; font-size: 11px; }
+
+    /* Shift tabs — stretch full width */
+    .shift-tabs { width: 100%; }
+    .shift-tab { flex: 1; padding: 9px 2px; font-size: 11px; letter-spacing: 0; text-align: center; }
+
+    /* KPI cards */
+    .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
+    .kpi-card { padding: 12px 12px; }
+    .kpi-label { font-size: 9px; margin-bottom: 6px; }
+    .kpi-value { font-size: 24px; }
+    .kpi-sub { font-size: 9px; }
+
+    /* Form */
+    .form-card { border-radius: 8px; margin-bottom: 16px !important; }
+    .form-inner { grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; }
+    .field-full { grid-column: 1 / -1; }
+    label { font-size: 9px; }
+    input, select, textarea {
+      padding: 11px 10px;
+      font-size: 15px; /* prevents iOS zoom */
+      border-radius: 6px;
+    }
+    .btn-submit { grid-column: 1 / -1; padding: 14px; font-size: 13px; border-radius: 8px; }
+
+    /* Color chips */
+    .color-chip { padding: 8px 10px; font-size: 12px; }
+
+    /* Table */
+    .table-card { border-radius: 8px; margin-bottom: 16px !important; }
+    table { min-width: 500px; }
+    thead th { padding: 9px 10px; font-size: 9px; letter-spacing: 0.06em; }
+    td { padding: 10px 10px; font-size: 12px; }
+    .td-body { font-size: 11px; }
+    .td-time { font-size: 11px; }
+    .model-tag { font-size: 10px; padding: 2px 6px; }
+    .btn-delete { padding: 7px 10px; font-size: 15px; }
+
+    /* Model totals */
+    .model-card { border-radius: 8px; }
+    .model-list { grid-template-columns: repeat(3, 1fr); }
+    .model-item { padding: 10px 10px; }
+    .model-total { font-size: 17px; }
+    .model-name { font-size: 11px; }
+
+    /* Toast — full width at bottom */
+    .toast {
+      bottom: 12px; right: 12px; left: 12px;
+      text-align: center;
+      font-size: 12px;
+      padding: 12px 16px;
+    }
+
+    /* Footer */
+    footer { font-size: 9px; padding: 12px; }
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-badge">DEL</div>
+    <div>
+      <div class="logo-text">Delivery</div>
+      <div class="logo-sub">Daily Delivery Report</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      Live
+    </div>
+    <div id="clock">—</div>
+  </div>
+</header>
+
+<main>
+  <!-- DATE + SHIFT -->
+  <div class="date-bar">
+    <div style="display:flex;flex-direction:column;gap:8px;width:100%">
+      <h1>Report — <span id="date-display">—</span></h1>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <button class="date-nav-btn" onclick="stepDate(-1)">&#8592;</button>
+        <input type="date" id="date-picker" onchange="onDatePick(this.value)" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text);outline:none;cursor:pointer;flex:1;min-width:120px">
+        <button class="date-nav-btn" onclick="stepDate(1)">&#8594;</button>
+        <button class="today-btn" onclick="goToday()">Today</button>
+      </div>
+    </div>
+    <div class="shift-tabs">
+      <button class="shift-tab active" onclick="setShift(this,'All')">All</button>
+      <button class="shift-tab" onclick="setShift(this,'Morning')">Morning</button>
+      <button class="shift-tab" onclick="setShift(this,'Evening')">Evening</button>
+      <button class="shift-tab" onclick="setShift(this,'Night')">Night</button>
+    </div>
+  </div>
+
+  <!-- DATA ENTRY -->
+  <div class="section-label">New Entry — Delivery In</div>
+  <div class="form-card" style="margin-bottom:28px">
+    <div class="form-inner">
+      <div>
+        <label for="f-body">No. Body</label>
+        <input type="text" id="f-body" placeholder="e.g. RVP10345" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter'){event.preventDefault();addEntry();}">
+      </div>
+      <div>
+        <label for="f-model">Model</label>
+        <select id="f-model">
+          <option value="">— Select —</option>
+          <option>RVP</option>
+          <option>RNP</option>
+          <option>RNB</option>
+          <option>RVA</option>
+          <option>A</option>
+          <option>C</option>
+          <option>E</option>
+          <option>GLA</option>
+          <option>GLC</option>
+        </select>
+      </div>
+      <div>
+        <label for="f-time">Time</label>
+        <input type="time" id="f-time" onkeydown="if(event.key==='Enter'){event.preventDefault();addEntry();}">
+      </div>
+      <div class="field-full">
+        <label for="f-color">Color</label>
+        <div class="color-grid" id="color-grid">
+          <button type="button" class="color-chip" data-val="" onclick="selectColor(this)">
+            <span style="font-size:11px;color:var(--muted)">None</span>
+          </button>
+        </div>
+        <input type="hidden" id="f-color" value="">
+      </div>
+      <div class="field-full">
+        <label for="f-remark">Remark</label>
+        <textarea id="f-remark" placeholder="Optional notes..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addEntry();}"></textarea>
+      </div>
+      <button class="btn-submit" onclick="addEntry()">+ Add Entry</button>
+    </div>
+  </div>
+
+  <!-- DELIVERY LOG TABLE -->
+  <div class="section-label">Delivery Log</div>
+  <div class="table-card" style="margin-bottom:28px">
+    <div class="table-header">
+      <span class="table-title">Delivery Log</span>
+      <span class="entry-count" id="entry-count">5 entries</span>
+    </div>
+    <div class="table-scroll"><table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Body No.</th>
+          <th>Time</th>
+          <th>Model</th>
+          <th>Color</th>
+          <th>Remark</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="log-tbody">
+      </tbody>
+    </table></div>
+  </div>
+
+  <!-- SUMMARY: KPI CARDS + MODEL TOTALS -->
+  <div class="section-label">Summary</div>
+  <div class="kpi-row">
+    <div class="kpi-card" style="--card-accent:var(--accent)">
+      <div class="kpi-label">Total Deliveries In</div>
+      <div class="kpi-value" id="kpi-total">5</div>
+      <div class="kpi-sub">Units logged today</div>
+    </div>
+    <div class="kpi-card" style="--card-accent:var(--rvp)">
+      <div class="kpi-label">MMO Units</div>
+      <div class="kpi-value" id="kpi-rvp" style="color:var(--rvp)">4</div>
+      <div class="kpi-sub">RNB + RNP + RVP + RVA</div>
+    </div>
+    <div class="kpi-card" style="--card-accent:var(--rnp)">
+      <div class="kpi-label">MB Units</div>
+      <div class="kpi-value" id="kpi-rnp" style="color:var(--rnp)">1</div>
+      <div class="kpi-sub">A + E + C + GLA + GLC</div>
+    </div>
+    <div class="kpi-card" style="--card-accent:#f472b6">
+      <div class="kpi-label">Last Body No.</div>
+      <div class="kpi-value" style="font-size:18px; color:#f472b6" id="kpi-last">—</div>
+      <div class="kpi-sub">Most recent delivery</div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-header">
+      <div class="table-title">Model Totals</div>
+    </div>
+    <div class="model-list" id="model-list"></div>
+  </div>
+</main>
+
+<footer>Delivery Daily Report System · Auto-refreshes every 60 s · Data stored in session</footer>
+
+<div class="toast" id="toast">Entry added ✓</div>
+
+<script>
+  // ── SUPABASE INIT ──
+  const SUPABASE_URL = 'https://jmxzkptwyzimizdkxyoa.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_FPHB41D2YuNk8B3Q6PO_4Q_WPYUfcUF';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const TABLE = 'deliveries';
+
+  // ── CONFIG ──
+  const modelColors = {
+    RVP: '#00d4aa', RNP: '#4da6ff', RNB: '#a78bfa',
+    RVA: '#fbbf24', A: '#fb923c', C: '#f472b6',
+    E: '#34d399', GLA: '#a3e635', GLC: '#e879f9'
+  };
+  const ALL_MODELS = ['RNB','RNP','RVP','RVA','A','C','E','GLA','GLC'];
+
+  // ── COLOR MAP ──
+  const COLOR_CODES = ['X37','P26','U28','W81','149','191','197','867','775','787','831','922','970','992','859'];
+  const COLOR_HEX = {
+    X37: '#2b303e', P26: '#a62c3b', U28: '#545b62', W81: '#f8f6f0',
+    149: '#f0f8fb', 191: '#fcd5cf', 197: '#0d031b', 667: '#2f6479',
+    775: '#3d3c3a', 787: '#e8e3db', 831: '#4b4e53', 922: '#b3b5b9',
+    970: '#1642de', 992: '#83a0ae', 859: '#7c6a21'
+  };
+
+  // ── DATE HELPERS ──
+  function todayKey() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  function fmtKey(key) {
+    const d = new Date(key + 'T00:00:00');
+    const today = todayKey();
+    const label = d.toLocaleDateString('en-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    return key === today ? label + ' (Today)' : label;
+  }
+
+  // ── SUPABASE HELPERS ──
+  async function loadEntries(dateKey) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('*')
+      .eq('date_key', dateKey)
+      .order('time', { ascending: true });
+    if (error) {
+      console.error(error);
+      showToast('Failed to load entries ✕', true);
+      return [];
+    }
+    return data || [];
+  }
+
+  async function insertEntry(dateKey, entry) {
+    const { error } = await supabase
+      .from(TABLE)
+      .insert([{ date_key: dateKey, ...entry }]);
+    if (error) {
+      console.error(error);
+      showToast('Failed to save entry ✕', true);
+      return false;
+    }
+    return true;
+  }
+
+  async function deleteEntryById(id) {
+    const { error } = await supabase
+      .from(TABLE)
+      .delete()
+      .eq('id', id);
+    if (error) {
+      console.error(error);
+      showToast('Failed to delete entry ✕', true);
+      return false;
+    }
+    return true;
+  }
+
+  // ── STATE ──
+  let currentDate = todayKey();
+  let currentShift = 'All';
+
+  // ── CLOCK ──
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // ── DEFAULT TIME INPUT ──
+  function setDefaultTime() {
+    const now = new Date();
+    document.getElementById('f-time').value =
+      `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  }
+  setDefaultTime();
+
+  // ── BUILD COLOR CHIPS ──
+  (function buildColorChips() {
+    const grid = document.getElementById('color-grid');
+    COLOR_CODES.forEach(code => {
+      const hex = COLOR_HEX[code] || '#888';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'color-chip';
+      btn.dataset.val = code;
+      btn.onclick = function() { selectColor(this); };
+      btn.innerHTML = `<span class="color-dot" style="background:${hex}"></span>${code}`;
+      grid.appendChild(btn);
+    });
+  })();
+
+  // ── DATE NAV ──
+  async function applyDate(dateKey) {
+    currentDate = dateKey;
+    document.getElementById('date-picker').value = dateKey;
+    document.getElementById('date-display').textContent = fmtKey(dateKey);
+
+    const isToday = dateKey === todayKey();
+    // Disable entry form when viewing past dates
+    document.querySelectorAll('.form-inner input, .form-inner select, .form-inner textarea, .btn-submit')
+      .forEach(el => el.disabled = !isToday);
+    document.querySelector('.form-card').style.opacity = isToday ? '1' : '0.45';
+    document.querySelector('.form-card').title = isToday ? '' : 'Cannot add entries to past dates';
+
+    await render();
+  }
+
+  function onDatePick(val) { if (val) applyDate(val); }
+
+  function dateToKey(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  function stepDate(dir) {
+    const d = new Date(currentDate + 'T00:00:00');
+    d.setDate(d.getDate() + dir);
+    const next = dateToKey(d);
+    if (next <= todayKey()) applyDate(next);
+  }
+
+  function goToday() { applyDate(todayKey()); }
+
+  // ── SHIFT FILTER ──
+  function shiftFilter(e) {
+    const [h, m] = e.time.split(':').map(Number);
+    const mins = h * 60 + m;
+    if (currentShift === 'Morning') return mins >= 360  && mins < 840;
+    if (currentShift === 'Evening') return mins >= 840  && mins < 1320;
+    if (currentShift === 'Night')   return mins >= 1320 || mins < 360;
+    return true;
+  }
+
+  // ── RENDER ──
+  function modelTagClass(m) {
+    return ['RVP','RNP','RNB','RVA'].includes(m) ? `model-${m}` : 'model-default';
+  }
+
+  async function render() {
+    const entries = await loadEntries(currentDate);
+    const filtered = entries.filter(shiftFilter);
+
+    const tbody = document.getElementById('log-tbody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted);font-size:13px;">No entries for this ${currentShift === 'All' ? 'date' : 'shift'}</td></tr>`;
+    } else {
+      tbody.innerHTML = filtered.map((e, i) => {
+        const chex = e.color && COLOR_HEX[e.color] ? COLOR_HEX[e.color] : null;
+        const colorCell = e.color
+          ? `<span class="td-color-dot" style="background:${chex || '#888'}"></span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px">${e.color}</span>`
+          : `<span style="color:var(--muted);font-size:12px">—</span>`;
+        const rowNum = i + 1;
+        return `<tr>
+          <td style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px;width:32px">${rowNum}</td>
+          <td class="td-body">${e.body}</td>
+          <td class="td-time">${e.time}</td>
+          <td><span class="model-tag ${modelTagClass(e.model)}">${e.model}</span></td>
+          <td style="display:flex;align-items:center">${colorCell}</td>
+          <td style="color:var(--muted); font-size:12px">${e.remark || '—'}</td>
+          <td><button class="btn-delete" onclick="deleteEntry('${e.id}')" title="Delete">&#x2715;</button></td>
+        </tr>`;
+      }).join('');
+    }
+
+    const counts = {};
+    ALL_MODELS.forEach(m => counts[m] = 0);
+    filtered.forEach(e => { if (counts[e.model] !== undefined) counts[e.model]++; });
+
+    const total = filtered.length;
+    document.getElementById('kpi-total').textContent = total;
+    const mmo = (counts['RNB']||0) + (counts['RNP']||0) + (counts['RVP']||0) + (counts['RVA']||0);
+    const mb  = (counts['A']||0) + (counts['E']||0) + (counts['C']||0) + (counts['GLA']||0) + (counts['GLC']||0);
+    document.getElementById('kpi-rvp').textContent = mmo;
+    document.getElementById('kpi-rnp').textContent = mb;
+    document.getElementById('entry-count').textContent = `${total} entr${total === 1 ? 'y' : 'ies'}`;
+    document.getElementById('kpi-last').textContent =
+      filtered.length ? filtered[filtered.length - 1].body : '—';
+
+    const maxVal = Math.max(...ALL_MODELS.map(m => counts[m]), 1);
+    document.getElementById('model-list').innerHTML = ALL_MODELS.map(m => {
+      const c = counts[m] || 0;
+      const color = modelColors[m] || '#7a8499';
+      const pct = Math.round((c / maxVal) * 100);
+      return `
+        <div class="model-item">
+          <div class="model-row">
+            <span class="model-name">
+              <span class="model-dot" style="background:${color}"></span>${m}
+            </span>
+            <span class="model-total" style="color:${c > 0 ? color : 'var(--muted)'}">${c}</span>
+          </div>
+          <div class="model-bar-wrap">
+            <div class="model-bar-track">
+              <div class="model-bar-fill" style="width:${pct}%;background:${color}"></div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── COLOR SELECTION ──
+  function selectColor(btn) {
+    document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('f-color').value = btn.dataset.val;
+  }
+
+  // ── DELETE ENTRY ──
+  async function deleteEntry(id) {
+    if (!confirm('Delete this entry?')) return;
+    const ok = await deleteEntryById(id);
+    if (!ok) return;
+    await render();
+    showToast('Entry deleted');
+  }
+
+  // ── ADD ENTRY ──
+  async function addEntry() {
+    if (currentDate !== todayKey()) return;
+    const body = document.getElementById('f-body').value.trim();
+    const model = document.getElementById('f-model').value;
+    const time = document.getElementById('f-time').value || new Date().toTimeString().slice(0,5);
+    const color = document.getElementById('f-color').value;
+    const remark = document.getElementById('f-remark').value.trim();
+
+    if (!body || !model) {
+      showToast('Fill in Body and Model ✕', true);
+      return;
+    }
+
+    const entries = await loadEntries(currentDate);
+    const dupBody = entries.find(e => e.body === body);
+    if (dupBody) {
+      showToast(`Body No. ${body} already exists! ✕`, true);
+      return;
+    }
+    const ok = await insertEntry(currentDate, { body, time, model, color, remark });
+    if (!ok) return;
+    await render();
+
+    document.getElementById('f-body').value = '';
+    document.getElementById('f-model').value = '';
+    document.getElementById('f-color').value = '';
+    document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('selected'));
+    document.getElementById('f-remark').value = '';
+    setDefaultTime();
+    showToast('Entry added ✓');
+  }
+
+  // ── SHIFT ──
+  async function setShift(btn, shift) {
+    currentShift = shift;
+    document.querySelectorAll('.shift-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    await render();
+  }
+
+  // ── TOAST ──
+  function showToast(msg, error = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.borderColor = error ? 'var(--warn)' : 'var(--accent)';
+    t.style.color = error ? 'var(--warn)' : 'var(--accent)';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ── INIT ──
+  applyDate(todayKey());
+</script>
+</body>
+</html>
