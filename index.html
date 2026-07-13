@@ -313,11 +313,11 @@
 
   /* ── SEARCH BUTTON & MODAL ── */
   .search-btn {
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; justify-content: center;
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 6px; padding: 6px 12px; cursor: pointer;
-    color: var(--muted); font-size: 12px; font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.04em; transition: all 0.15s;
+    border-radius: 6px; width: 32px; height: 32px; cursor: pointer;
+    color: var(--muted); font-size: 15px; flex-shrink: 0;
+    transition: all 0.15s;
   }
   .search-btn:hover { color: var(--accent); border-color: rgba(0,212,170,0.35); }
 
@@ -413,6 +413,10 @@
     .model-list { grid-template-columns: repeat(3,1fr); }
     .toast { bottom: 12px; right: 12px; left: 12px; text-align: center; }
     footer { font-size: 9px; padding: 10px; }
+    .header-right { gap: 10px; }
+    .search-overlay { padding-top: 0; align-items: stretch; }
+    .search-modal { width: 100%; max-width: none; max-height: 100vh; height: 100vh; border-radius: 0; }
+    .search-modal-head input { font-size: 16px; }
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -433,7 +437,7 @@
     </div>
   </div>
   <div class="header-right">
-    <button class="search-btn" onclick="openSearchModal()" title="Search body number">&#128269; Search Body No.</button>
+    <button class="search-btn" onclick="openSearchModal()" title="Search body number" aria-label="Search body number">&#128269;</button>
     <div class="live-badge"><div class="live-dot"></div>Live</div>
     <div id="clock">—</div>
   </div>
